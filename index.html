@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>WEB WORKERS</title>
+    <style>
+        #input {
+            width: 0;
+            height: 0;
+            overflow: hidden;
+        }
+
+        #input+label {
+            display: inline-block;
+            background-color: #ccc;
+            font-family: sans-serif;
+            padding: 1em;
+            border-radius: 30px;
+            font-size: 2em;
+            transition: all 200ms ease;
+
+        }
+
+        #input+label:hover {
+            background-color: #777;
+            color: white;
+            cursor: pointer;
+        }
+
+        #input:focus+label {
+            outline: 2px solid lightseagreen;
+        }
+
+        canvas {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <input type="file" name="input" accept="image/*" id="input">
+        <label for="input">Choose File</label>
+    </div>
+    <br><br>
+    <canvas id="preview"></canvas>
+    <script type="text/javascript">
+        const $input = document.querySelector("#input");
+        const $preview = document.querySelector("#preview");
+        const previewCtx = $preview.getContext('2d');
+        const fileReader = new FileReader();
+        const image = new Image();
+
+
+        function applyFilter() {
+            const imageData = previewCtx.getImageData(0,0,image.width, image.height);
+            for (let x=0; x<image.width; x++){
+                for(let y=0; y<image.height; y++){
+                    let index = (x + (y * image.width)) * 4;            
+                    imageData.data[index] = imageData.data[index]*1.2;
+
+                }
+            }
+
+            previewCtx.putImageData(imageData, 0, 0);
+
+        }
+
+        image.addEventListener("load", (e) => {
+            $preview.width = image.width;
+            $preview.height = image.height;
+            previewCtx.drawImage(image, 0, 0);
+            applyFilter();
+            // document.body.appendChild(image);
+        })
+
+
+        fileReader.addEventListener('load', (e) => {
+            const base64 = e.target.result;
+            image.src = base64;
+        });
+
+        $input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            fileReader.readAsDataURL(file)
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>WEB WORKERS</title>
+    <style>
+        #input {
+            width: 0;
+            height: 0;
+            overflow: hidden;
+        }
+
+        #input+label {
+            display: inline-block;
+            background-color: #ccc;
+            font-family: sans-serif;
+            padding: 1em;
+            border-radius: 30px;
+            font-size: 2em;
+            transition: all 200ms ease;
+
+        }
+
+        #input+label:hover {
+            background-color: #777;
+            color: white;
+            cursor: pointer;
+        }
+
+        #input:focus+label {
+            outline: 2px solid lightseagreen;
+        }
+
+
+
+        /* canvas {
+            max-width: 100vw;
+            max-height: 80vh;
+            width: 100%;
+        } */
+    </style>
+</head>
+
+<body>
+    <div>
+        <input type="file" name="input" accept="image/*" id="input">
+        <label for="input">Choose File</label>
+    </div>
+    <br><br>
+    <canvas id="preview"></canvas>
+    <canvas id="smaller"></canvas>
+    <script type="text/javascript">
+        const $input = document.querySelector("#input");
+        const $preview = document.querySelector("#preview");
+        const $smaller = document.querySelector("#smaller");
+        const previewCtx = $preview.getContext('2d');
+        const smallerCtx = $smaller.getContext('2d');
+        let imgData;
+        // const image = new Image();
+        const worker = new Worker('worker.js');
+
+
+
+        function applyFilter() {
+            const imageData = previewCtx.getImageData(0, 0, $preview.width, $preview.height);
+            // worker.postMessage(imageData); copies the imageData
+
+            worker.postMessage(imageData, [imageData.data.buffer]);
+
+
+        }
+
+        worker.addEventListener('message', (d) => {
+            console.log('message received from worker')
+            const imageData = d.data;
+            
+            imgData = imageData;
+            // imgData = new ImageData(imageData, $smaller.width, $smaller.height);
+            console.log(imgData);
+
+            // const imgObj = new ImageData(imageData, parseInt($preview.width/2), parseInt($preview.height/2));
+            // console.log(imgObj);
+            // previewCtx.putImageData(imageData, 0, 0);
+            // smallerCtx.putImageData(imageData, 0, 0);
+            // new ImageData()
+        });
+
+
+
+        $input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            createImageBitmap(file)
+                .then((bitmap) => {
+                    
+                    $preview.width = bitmap.width;
+                    $preview.height = bitmap.height;
+                    $smaller.width=parseInt($preview.width/2);
+                    $smaller.height=parseInt($preview.height/2);
+                    previewCtx.drawImage(bitmap, 0, 0);
+                    smallerCtx.drawImage(bitmap, 0 ,0);
+                    applyFilter();
+                })
+
+        });
+    </script>
+</body>
+
+</html>
